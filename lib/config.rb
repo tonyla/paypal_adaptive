@@ -15,8 +15,8 @@ module PaypalAdaptive
       :beta_sandbox => "https://svcs.beta-sandbox.paypal.com"
     } unless defined? API_BASE_URL_MAPPING
 
-    attr_accessor :config_filepath, :paypal_base_url, :api_base_url, :headers, :ssl_cert_path, :ssl_cert_file
-  
+    attr_accessor :config_filepath, :paypal_base_url, :api_base_url, :headers, :ssl_ca_cert_path, :ssl_cert_file
+
     def initialize(env=nil, config_override=nil)
       if env
         #non-rails env
@@ -37,14 +37,13 @@ module PaypalAdaptive
       else
         pp_env = config['environment'].to_sym
 
-        @ssl_cert_path = nil
+        @ssl_ca_cert_path = nil
         @ssl_cert_file = nil
         @paypal_base_url = PAYPAL_BASE_URL_MAPPING[pp_env]
         @api_base_url = API_BASE_URL_MAPPING[pp_env]
         @headers = {
           "X-PAYPAL-SECURITY-USERID" => config['username'],
           "X-PAYPAL-SECURITY-PASSWORD" => config['password'],
-          "X-PAYPAL-SECURITY-SIGNATURE" => config['signature'],
           "X-PAYPAL-APPLICATION-ID" => config['application_id'],
           "X-PAYPAL-REQUEST-DATA-FORMAT" => "JSON",
           "X-PAYPAL-RESPONSE-DATA-FORMAT" => "JSON"
@@ -52,11 +51,18 @@ module PaypalAdaptive
 
         if config['ssl_cert_file'] && config['ssl_cert_file'].length > 0
           @ssl_cert_file = config['ssl_cert_file']
-        elsif File.exists?("/etc/ssl/certs")
-          @ssl_cert_path = "/etc/ssl/certs"
-        else
-          @ssl_cert_file = File.join(File.dirname(__FILE__), "..", "cacert.pem")
         end
+
+        if File.exists?("/etc/ssl/certs")
+          @ssl_ca_cert_path = "/etc/ssl/certs"
+        else
+          @ssl_ca_cert_path = File.join(File.dirname(__FILE__), "..", "cacert.pem")
+        end
+
+        @headers.merge!({
+          "X-PAYPAL-SECURITY-SIGNATURE" => config['signature']
+        }) if @ssl_cert_file.blank?
+
       end
     end
 
