@@ -29,7 +29,7 @@ Gem::Specification.new do |s|
     "lib/paypal_adaptive.rb",
     "lib/request.rb",
     "lib/response.rb",
-    "paypal_adaptive.gemspec",
+    "tonyla-paypal_adaptive.gemspec",
     "templates/paypal_ipn.rb",
     "test/data/invalid_chain_pay_request.json",
     "test/data/invalid_parallel_pay_request.json",
