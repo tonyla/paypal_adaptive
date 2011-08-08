@@ -20,8 +20,16 @@ module PaypalAdaptive
       http = Net::HTTP.new(url.host, 443)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      http.ca_path = @@ssl_ca_cert_path unless @@ssl_ca_cert_path.nil?
-      http.ca_file = @@ssl_cert_file unless @@ssl_cert_file.nil?
+
+      if @@ssl_cert_file
+        cert = File.read(@@ssl_cert_file)
+        http.cert = OpenSSL::X509::Certificate.new(cert)
+        http.key = OpenSSL::PKey::RSA.new(cert)
+      end
+
+      if ssl_ca_cert_path
+        http.ca_path = @@ssl_ca_cert_path unless @@ssl_ca_cert_path.nil? #/etc/ssl/certs'
+      end
 
       path = "#{@@paypal_base_url}/cgi-bin/webscr"
       resp, response_data = http.post(path, data)
